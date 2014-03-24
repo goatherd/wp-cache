@@ -105,8 +105,8 @@ class Cache implements \SplSubject
     {
         // run once
         if (!isset(self::$instance)) {
-            static::$instance = new static();
-            static::$instance->initInstance();
+            self::$instance = new static();
+            self::$instance->initInstance();
         }
 
         return self::$instance;
@@ -121,9 +121,9 @@ class Cache implements \SplSubject
     {
         $instance = static::initPlugin();
 
-        if (!static::$wordpressEnabled) {
+        if (!self::$wordpressEnabled) {
             // mark context switch
-            static::$wordpressEnabled = true;
+            self::$wordpressEnabled = true;
             $instance->initWordpressInstance();
         }
 
@@ -137,7 +137,7 @@ class Cache implements \SplSubject
      */
     public function initWordpressInstance()
     {
-        if (!static::$wordpressEnabled) {
+        if (!self::$wordpressEnabled) {
             throw new \ErrorException('WordPress not yet marked available.');
         }
 
@@ -352,7 +352,7 @@ class Cache implements \SplSubject
             $url .= $_SERVER['HTTP_HOST'];
             $url .= isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
 
-            if (static::$wordpressEnabled) {
+            if (self::$wordpressEnabled) {
                 $url = apply_filters('gh-cache-url', $url);
             }
             $this->url = $url;
@@ -380,7 +380,7 @@ class Cache implements \SplSubject
     {
         if (!isset($this->timeToLive) || $refresh) {
             $ttl = $this->config[self::CONFIG_TIME_TO_LIVE];
-            if (static::$wordpressEnabled) {
+            if (self::$wordpressEnabled) {
                 $ttl = (integer) apply_filters('gh-cache-ttl', $ttl);
             }
             $this->timeToLive = $ttl;
@@ -461,7 +461,7 @@ class Cache implements \SplSubject
     public function notify()
     {
         // wordpress integration
-        if (static::$wordpressEnabled) {
+        if (self::$wordpressEnabled) {
             do_action($this->getContext(), $this);
         }
 
