@@ -31,7 +31,18 @@ class Cache implements \SplSubject
     const CONFIG_HANDLERS = 'handle';
     const CONFIG_TIME_TO_LIVE = 'ttl';
     const CONFIG_IS_CACHEABLE = 'cache';
-    /**@+-*/
+    const CONFIG_PURGE_CONTEXT = self::PURGE_CONTEXT_SINGLE;
+    /*@+-*/
+
+    /**@#+
+     * Purge cascade context.
+     *
+     * @var string
+     */
+    const PURGE_CONTEXT_SINGLE  = 'single';
+    const PURGE_CONTEXT_RELATED = 'related';
+    const PURGE_CONTEXT_FULL    = 'full'; // not yet supported
+    /*@#-*/
 
     /**@#+
      * Event context.
@@ -71,11 +82,18 @@ class Cache implements \SplSubject
     protected $url;
 
     /**
-     * Event context.
+     * Current event context.
      *
      * @var string
      */
-    private $context;
+    protected $context;
+
+    /**
+     * Current purge cascade context.
+     *
+     * @var string
+     */
+    protected $purgeContext;
 
     /**
      * Plugin scope object instance.
@@ -131,6 +149,31 @@ class Cache implements \SplSubject
     }
 
     /**
+     * Prepare plugin.
+     *
+     * WordPress might not yet be available.
+     *
+     */
+    public function initInstance()
+    {
+        // register default handlers
+        foreach ($this->config[self::CONFIG_HANDLERS] as $class) {
+            if (class_exists($class, true)) {
+                $this->attach(new $class());
+            }
+        }
+    
+        // force reset
+        $this->isCacheable = null;
+        $this->url = null;
+        $this->timeToLive = null;
+    
+        // allow handlers to prepare for wordpress
+        $this->context = self::EVENT_INIT;
+        $this->notify();
+    }
+
+    /**
      * Enable filters and caching listener.
      *
      * @throws \ErrorException if WordPress is not yet marked available
@@ -176,6 +219,15 @@ class Cache implements \SplSubject
     }
 
     /**
+     *
+     * @return boolean
+     */
+    public function isWordpressEnabled()
+    {
+        return self::$wordpressEnabled;
+    }
+
+    /**
      * Purge post by comment id.
      *
      * @param unknown $commentId
@@ -184,6 +236,7 @@ class Cache implements \SplSubject
     {
         $c = get_comment($commentId);
         $url = get_permalink($c->comment_post_ID);
+        $this->purgeContext = self::PURGE_CONTEXT_SINGLE;
         $this->doPurge($url);
     }
 
@@ -195,6 +248,7 @@ class Cache implements \SplSubject
     public function actionPurgePost($postId)
     {
         $url = get_permalink($postId);
+        $this->purgeContext = self::PURGE_CONTEXT_RELATED;
         $this->doPurge($url);
     }
 
@@ -222,7 +276,7 @@ class Cache implements \SplSubject
     // nginx-champuru hack
     public function wp_print_footer_scripts_admin_ajax()
     {
-        // TODO use script file
+        // -TODO use script file
         $js = '
 <script type="text/javascript">
 (function($){
@@ -279,25 +333,18 @@ class Cache implements \SplSubject
     }
 
     /**
-     * 
+     * Purge cascade context.
+     *
+     * @return string
      */
-    public function initInstance()
+    public function getPurgeContext()
     {
-        // register default handlers
-        foreach ($this->config[self::CONFIG_HANDLERS] as $class) {
-            if (class_exists($class, true)) {
-                $this->attach(new $class());
-            }
+        if (!isset($this->purgeContext)) {
+            // -TODO may want to add filter later but that would require some overhead
+            $this->purgeContext = $this->config[self::CONFIG_PURGE_CONTEXT];
         }
 
-        // force reset
-        $this->isCacheable = null;
-        $this->url = null;
-        $this->timeToLive = null;
-
-        // allow handlers to prepare for wordpress
-        $this->context = self::EVENT_INIT;
-        $this->notify();
+        return $this->purgeContext;
     }
 
     /**
@@ -405,6 +452,9 @@ class Cache implements \SplSubject
 
         $this->context = self::EVENT_PURGE;
         $this->notify();
+
+        // reset purge context
+        $this->purgeContext = null;
     }
 
     /**
