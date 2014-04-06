@@ -37,9 +37,9 @@ By default serves nginx reverse proxy/ fastcgi cache modules but is extendedable
 
 ### Installation
 
-**TODO** explain nginx config (simple)
-**TODO** explain nginx config (full)
-**TODO** explain nginx config (advanced purge for nginx 1.5.7+ and purge module)
+* **TODO** explain nginx config (simple)
+* **TODO** explain nginx config (full)
+* **TODO** explain nginx config (advanced purge for nginx 1.5.7+ and purge module)
 
 ## Incompatibilities
 
