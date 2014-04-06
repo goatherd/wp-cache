@@ -33,7 +33,7 @@ class Veto extends AbstractObserver
      */
     public function handleVeto($url, $subject)
     {
-        global $wp_query;
+        global $wp_query, $wp_object_cache;
 
         // reset (debug) log
         $this->log = array();
@@ -73,7 +73,7 @@ class Veto extends AbstractObserver
             $this->log[] = 'ajax or cron request';
         }
 
-        if (function_exists('is_user_logged_in') && is_user_logged_in()) {
+        if (function_exists('is_user_logged_in') && isset($wp_object_cache) && is_user_logged_in()) {
             $this->log[] = 'is logged in';
         }
 
