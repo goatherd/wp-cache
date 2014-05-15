@@ -78,7 +78,7 @@ class Veto extends AbstractObserver
         }
 
         // avoid if special cookies are set
-        if (preg_match('/^(wp-postpass|wordpress_logged_in|comment_author)_/', implode("\n", array_keys($_COOKIE)))) {
+        if (preg_match('`^(wp-postpass|wordpress_logged_in|comment_author)_`im', implode("\n", array_keys($_COOKIE)))) {
             $this->log[] = 'special cookie no-cache';
         }
 
