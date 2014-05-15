@@ -269,20 +269,19 @@ class Cache implements \SplSubject
                 true
             );
 
-            add_action("wp_print_footer_scripts", array($this, "wp_print_footer_scripts_admin_ajax"));
+            add_action("wp_print_footer_scripts", array($this, "wp_print_footer_scripts_admin_ajax"), 9999);
         }
     }
 
     // nginx-champuru hack
     public function wp_print_footer_scripts_admin_ajax()
     {
-        // -TODO use script file
         $js = '
 <script type="text/javascript">
 (function($){
-    $("#author").val($.cookie("comment_author_%1$s"));
-    $("#email").val($.cookie("comment_author_email_%1$s"));
-    $("#url").val($.cookie("comment_author_url_%1$s"));
+  $("#author").val($.cookie("comment_author_%1$s"));
+  $("#email").val($.cookie("comment_author_email_%1$s"));
+  $("#url").val($.cookie("comment_author_url_%1$s"));
 })(jQuery);
 </script>
 ';
